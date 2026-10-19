@@ -1,8 +1,8 @@
 # Bangalore Cab Fare Prediction
 
-An end-to-end machine learning project for predicting Uber cab fares for trips in Bangalore.
+An end-to-end machine learning system for predicting Uber cab fares in Bangalore using automated route enrichment, fare data collection, temporal features, and a production-style prediction pipeline.
 
-The project combines route information, Uber fare observations, temporal information, ride type, and pickup/dropoff locations to build a fare prediction model. A Streamlit application provides an interactive interface for selecting a pickup and dropoff location and viewing estimated fares for multiple ride types.
+The project combines OpenStreetMap-based location data, GraphHopper routing, automated Uber fare collection, exploratory data analysis, time-aware model evaluation, and a Streamlit prediction application.
 
 ## Project Pipeline
 
@@ -28,19 +28,37 @@ Final Random Forest Model
 Streamlit Prediction App
 ```
 
+
+add:
+
+```markdown
+## Project Scale
+
+| Component | Scale |
+|---|---:|
+| Trip pairs generated | 25,000 |
+| Bangalore locations | 247+ |
+| Fare observations | 15,300+ |
+| Routes represented | 750 |
+| Uber ride types | 23 |
+| Final test observations | 5,987 |
+
 ## Features
 
 - Bangalore pickup and dropoff location selection
 - Automatic route lookup
 - Road distance and travel time
-- Automatic Indian Standard Time (IST) day/time detection
+- Automatic current day/time detection
 - Time-slot based fare prediction
 - Predictions for 23 Uber ride types
 - Log-transformed target modeling
 - Date/time-aware cross-validation
+- Missing-value and outlier analysis
 - Model error analysis
 - Interactive Streamlit interface
 - Sorted fare comparison table
+- Automated route enrichment using GraphHopper
+- Automated Uber fare collection using Playwright
 
 ## Dataset
 
@@ -122,9 +140,18 @@ The transformation helps handle the right-skewed fare distribution.
 
 ### Validation Strategy
 
-Because observations contain repeated routes and were collected over time, chronological/date-based evaluation was used instead of relying only on a random split.
+Because fare observations were collected over time and routes can have repeated observations, chronological/date-based evaluation was used instead of relying only on a random train-test split.
 
-The development data was evaluated using 4 date-based cross-validation folds followed by a held-out chronological test set.
+The dataset was divided into:
+
+```text
+Full Dataset
+      │
+      ├── Development Data
+      │       │
+      │       └── 4 Expanding Date-Based CV Folds
+      │
+      └── Chronological Test Set
 
 ## Model Performance
 
@@ -150,6 +177,22 @@ Key observations:
 - Larger errors were concentrated more heavily among high-fare observations.
 - Some rental and premium ride types showed larger errors.
 - Very expensive and longer-distance trips were generally harder to predict accurately.
+
+## Feature Importance
+
+Feature importance analysis showed that the model relied primarily on:
+
+1. Ride type
+2. Road distance
+3. Travel time
+4. Time slot
+5. Pickup location
+6. Dropoff location
+7. Day of week
+8. Pickup category
+9. Dropoff category
+
+The strongest individual predictive signals came from **ride type** and **road distance**, followed by travel time and temporal/location information.
 
 ## Streamlit Application
 
@@ -181,32 +224,45 @@ streamlit run app.py
 Bangalore_Cab_Fare_Prediction/
 │
 ├── app.py
+├── collector/
+│   ├── collectors/
+│   ├── services/
+│   ├── scripts/
+│   ├── parsers/
+│   ├── validators/
+│   └── ...
+│
+├── config/
+│   ├── collection_schedule.py
+│   ├── routing.py
+│   ├── sampling.py
+│   └── ...
+│
 ├── data/
-│   ├── raw/
-│   │   └── fares/
-│   │       └── uber_fares.csv
-│   └── processed/
-│       ├── fares/
-│       │   └── uber_fares_processed.csv
-│       └── routes/
-│           ├── routes.csv
-│           ├── uber_validated_routes.csv
-│           └── uber_rejected_routes.csv
+│   ├── processed/
+│   │   ├── fares/
+│   │   │   └── uber_fares_processed.csv
+│   │   └── routes/
+│   │       ├── routes.csv
+│   │       ├── uber_validated_routes.csv
+│   │       └── uber_rejected_routes.csv
+│   │
+│   └── training/
 │
 ├── models/
+│   ├── fare_estimate.py
 │   └── final_fare_prediction_model.joblib
 │
 ├── notebooks/
 │   ├── 01_eda_fare_dataset.ipynb
 │   └── 02_baseline_model.ipynb
 │
-├── src/
-│   └── ...
-│
+├── research/
+├── tests/
 ├── requirements.txt
 ├── .gitignore
+├── .gitattributes
 └── README.md
-```
 
 ## Model Artifact
 
@@ -214,26 +270,36 @@ The trained model is saved as:
 
 ```text
 models/final_fare_prediction_model.joblib
-```
-
-The saved pipeline performs the required preprocessing. Since the model predicts the log-transformed target, the Streamlit application converts predictions back to rupees with:
-
-```python
-predicted_fares = np.expm1(predicted_log_fares)
-```
 
 ## Technologies Used
 
+### Data Collection & Routing
+
 - Python
+- OpenStreetMap (OSM)
+- GraphHopper Routing API
+- Playwright
+- Automated Uber fare collection
+
+### Data Processing & Machine Learning
+
 - Pandas
 - NumPy
 - Scikit-learn
 - Random Forest
-- GraphHopper
-- Streamlit
 - Joblib
 - Jupyter Notebook
-- OpenStreetMap-based location data
+
+### Application
+
+- Streamlit
+
+### Development & Testing
+
+- Git
+- Git LFS
+- Python virtual environments
+- Automated test scripts
 
 ## Key Engineering Decisions
 
