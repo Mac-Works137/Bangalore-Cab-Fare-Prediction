@@ -28,10 +28,6 @@ Final Random Forest Model
 Streamlit Prediction App
 ```
 
-
-add:
-
-```markdown
 ## Project Scale
 
 | Component | Scale |
