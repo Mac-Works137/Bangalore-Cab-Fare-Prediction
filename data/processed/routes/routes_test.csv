@@ -1,0 +1,6 @@
+pickup_osm_id,pickup_name,pickup_category,pickup_latitude,pickup_longitude,drop_osm_id,drop_name,drop_category,drop_latitude,drop_longitude,distance_km,road_distance_km,travel_time_minutes
+node/347241683,Lalbagh Glasshouse,tourist_attraction,12.9498004,77.5865608,node/1006462322,Hotel Maurya,hotel,12.980921,77.576491,3.628,5.063,13.98
+node/5760197765,Krishnarajapura,metro_station,12.9999024,77.6776703,node/454158749,Sri Ramachandra Nilayam,residential_area,13.0232546,77.6318732,5.6,7.613,16.43
+node/2424154985,Tippu Drop,tourist_attraction,13.3681232,77.681081,node/454155754,Hennur Residency,residential_area,13.0180114,77.6326457,39.282,56.015,96.09
+node/769216417,Ramakrishna Nursing Home and Hospital,hospital,12.9364329,77.583477,node/454155754,Hennur Residency,residential_area,13.0180114,77.6326457,10.52,12.613,33.53
+node/5760197765,Krishnarajapura,metro_station,12.9999024,77.6776703,node/338178218,Philips Innovation Campus,it_park,13.0440258,77.621342,7.83,9.943,20.89
