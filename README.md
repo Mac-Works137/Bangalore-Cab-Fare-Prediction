@@ -58,7 +58,7 @@ Streamlit Prediction App
 
 ## Dataset
 
-The processed fare dataset contains information including:
+The processed fare dataset contains information including both modeling features and auxiliary fare-collection fields:
 
 - Timestamp
 - Time slot
@@ -91,6 +91,8 @@ Target:
 ```text
 current_price
 ```
+
+`seats` and `eta_minutes` were retained in the processed dataset for analysis but were excluded from the final model.
 
 ## Exploratory Data Analysis
 
@@ -148,6 +150,11 @@ Full Dataset
       │       └── 4 Expanding Date-Based CV Folds
       │
       └── Chronological Test Set
+```
+
+The development data was evaluated using four expanding date-based cross-validation folds followed by a held-out chronological test set.
+
+This approach better reflects the intended use case of predicting future fares using information available up to the prediction time.
 
 ## Model Performance
 
@@ -203,10 +210,9 @@ Users can:
 1. Select a pickup location.
 2. Select a compatible dropoff location.
 3. View the automatically retrieved route distance and travel time.
-4. Use the current IST day/time and model time slot.
+4. Automatically determine the current day/time and corresponding model time slot.
 5. Predict fares for all supported ride types.
-6. View the lowest and highest estimated fares.
-7. Compare predicted fares in a sorted table.
+6. Compare predicted fares in a sorted table.
 
 ### Run the Application
 
@@ -214,12 +220,57 @@ Users can:
 streamlit run app.py
 ```
 
+## Automated Data Collection Pipeline
+
+The project includes an automated pipeline for generating routes and collecting Uber fare observations.
+
+### Location Data
+
+Bangalore pickup and dropoff locations are based on **OpenStreetMap (OSM)** data.
+
+### Trip Pair Generation
+
+The project generates pickup/dropoff trip pairs from the available Bangalore locations.
+
+### Route Enrichment
+
+Trip pairs are enriched with:
+
+- Road distance
+- Estimated travel time
+
+using the **GraphHopper Routing API**.
+
+### Uber Route Validation
+
+Candidate routes are validated before being added to the pool of routes used for fare collection.
+
+### Uber Fare Collection
+
+Uber fare observations are collected automatically using **Playwright**.
+
+The collected observations include information such as:
+
+- Timestamp
+- Time slot
+- Day of week
+- Pickup
+- Dropoff
+- Ride type
+- Current price
+- Original price
+- ETA
+- Promotion information
+
+The collected fare observations are subsequently processed and merged with route metadata to create the modeling dataset.
+
 ## Project Structure
 
 ```text
 Bangalore_Cab_Fare_Prediction/
 │
 ├── app.py
+│
 ├── collector/
 │   ├── collectors/
 │   ├── services/
@@ -238,6 +289,7 @@ Bangalore_Cab_Fare_Prediction/
 │   ├── processed/
 │   │   ├── fares/
 │   │   │   └── uber_fares_processed.csv
+│   │   │
 │   │   └── routes/
 │   │       ├── routes.csv
 │   │       ├── uber_validated_routes.csv
@@ -254,11 +306,14 @@ Bangalore_Cab_Fare_Prediction/
 │   └── 02_baseline_model.ipynb
 │
 ├── research/
+│
 ├── tests/
+│
 ├── requirements.txt
 ├── .gitignore
 ├── .gitattributes
 └── README.md
+```
 
 ## Model Artifact
 
@@ -266,6 +321,26 @@ The trained model is saved as:
 
 ```text
 models/final_fare_prediction_model.joblib
+```
+
+The saved model contains the required preprocessing and Random Forest prediction pipeline.
+
+Since the model predicts the log-transformed target, predictions are converted back to the original fare scale using:
+
+```python
+predicted_fares = np.expm1(predicted_log_fares)
+```
+
+### Git LFS
+
+The trained model is approximately 1 GB and is stored using **Git Large File Storage (Git LFS)**.
+
+After cloning the repository, initialize Git LFS and download the model:
+
+```bash
+git lfs install
+git lfs pull
+```
 
 ## Technologies Used
 
@@ -299,21 +374,25 @@ models/final_fare_prediction_model.joblib
 
 ## Key Engineering Decisions
 
-### Automatic route information
+### Automatic Route Information
 
 Users do not manually enter distance or travel time. The application retrieves route information from the validated route dataset based on the selected pickup/dropoff pair.
 
-### Multiple ride types
+### Multiple Ride Types
 
 The application predicts fares for all supported ride types so their estimated prices can be compared.
 
-### Time-aware evaluation
+### Time-Aware Evaluation
 
 Fare behavior changes over time, so chronological/date-based evaluation was used to better reflect future prediction behavior.
 
-### Log-transformed target
+### Log-Transformed Target
 
 The fare distribution is positively skewed with a small number of expensive trips. A log transformation was used for the final Random Forest model.
+
+### Route Feature Selection
+
+Route-level information was evaluated during model development but was not included as a final model feature because route is effectively represented by the combination of pickup and dropoff locations and introduces additional high-cardinality information.
 
 ## Limitations
 
@@ -336,31 +415,48 @@ The fare distribution is positively skewed with a small number of expensive trip
 
 ## How to Run
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd Bangalore_Cab_Fare_Prediction
+git clone https://github.com/Mac-Works137/Bangalore-Cab-Fare-Prediction.git
+cd Bangalore-Cab-Fare-Prediction
 ```
 
-### 2. Create a virtual environment
+### 2. Initialize Git LFS
+
+```bash
+git lfs install
+git lfs pull
+```
+
+### 3. Create a Virtual Environment
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Install dependencies
+### 4. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Start the application
+### 5. Start the Application
 
 ```bash
 streamlit run app.py
 ```
+
+The application will be available at the local Streamlit URL shown in the terminal.
+
+## Notes on Data
+
+The repository contains processed datasets required to understand the modeling workflow.
+
+Raw collected fare data and local browser/session artifacts are intentionally excluded from version control.
+
+The trained final model is included through Git LFS so that the Streamlit application can be run without retraining the model.
 
 ## Author
 
